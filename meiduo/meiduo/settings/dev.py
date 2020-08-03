@@ -13,7 +13,8 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -62,7 +63,20 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
             ],
             # 补充Jinja2模板引擎环境
-            'environment': 'meiduo_mall.utils.jinja2_env.jinja2_environment',
+            'environment': 'meiduo.utils.jinja2_env.jinja2_environment',
+        },
+    },
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'Template')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
         },
     },
 ]
@@ -170,7 +184,7 @@ LOGGING = {
         'file': {  # 向文件中输出日志
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(os.path.dirname(BASE_DIR), 'logs/meiduo.log'),  # 日志文件的位置
+            'filename': os.path.join(BASE_DIR, 'logs/meiduo.log'),  # 日志文件的位置
             'maxBytes': 300 * 1024 * 1024,
             'backupCount': 10,
             'formatter': 'verbose'
