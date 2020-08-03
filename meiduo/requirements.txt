@@ -1,0 +1,5 @@
+django
+Jinja2
+mysqlclient
+django-redis
+
