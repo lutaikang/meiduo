@@ -18,6 +18,7 @@ import os, sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # 修改BASE_DIR路径
 
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))  # 追加项目导报路径
+sys.path.insert(1, BASE_DIR)
 # print(sys.path)
 # print(BASE_DIR)
 

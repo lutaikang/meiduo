@@ -1,4 +1,4 @@
-from random import random
+import random
 from venv import logger
 
 from django.http import HttpResponse, JsonResponse
@@ -7,8 +7,10 @@ from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django_redis import get_redis_connection
 
-from meiduo.meiduo.utils.response_code import RETCODE
+from meiduo.utils.response_code import RETCODE
 from verifications.captcha.captcha import captcha
+from verifications.yuntongxun.ccp_sms import CCP
+from meiduo.utils import constants
 
 
 class ImageCodeView(View):
@@ -34,27 +36,43 @@ class SMSCodeView(View):
     def get(self, request, mobile):
         image_code_client = request.GET.get('image_code')
         uuid = request.GET.get('uuid')
-
+        # 校验参数
         if not all([image_code_client, uuid]):
             return JsonResponse({'code': RETCODE.IMAGECODEERR, 'errmsg': '图形验证码失效'})
-
+        # 获取图片验证码
         redis_conn = get_redis_connection('verify_code')
-        image_code_server = redis_conn.pop('sms_%s' % uuid)
-
+        image_code_server = redis_conn.get('img_%s' % uuid)
+        # 删除图片验证码
+        try:
+            redis_conn.delete('img_%s' % uuid)
+        except Exception as e:
+            logger.error(e)
+        # 对比图片验证码
         if image_code_server is None:
-            return JsonResponse({'code': RETCODE.IMAGECODEERR, 'errmsg': '图形验证码失效货已过期'})
-
+            return JsonResponse({'code': RETCODE.IMAGECODEERR, 'errmsg': '图形验证码失效或已过期'})
         if image_code_client.lower() != image_code_server.decode().lower():
             return JsonResponse({'code': RETCODE.IMAGECODEERR, 'errmsg': '验证码错误'})
 
+        # 后端60秒倒计时  避免频繁请求
+        send_flag = redis_conn.get('send_flag_%s' % mobile)
+        if send_flag:
+            return JsonResponse({'code': RETCODE.THROTTLINGERR, 'errmsg': '发送短信过于频繁'})
+
+        # 生成短信验证码
         sms_code = '%06d' % random.randint(0, 999999)
         logger.info(sms_code)
+        print(sms_code)
 
-        redis_conn.setex('sms_%s' % sms_code, 300, sms_code)
+        pl = redis_conn.pipeline()
+
+        pl.setex('sms_%s' % mobile, 300, sms_code)
+        # 重新写入send_flag
+        pl.setex('send_flag_%s' % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
+        # 执行请求
+        pl.execute()
 
         # 发送短信验证码
-        CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES // 60],
-                                constants.SEND_SMS_TEMPLATE_ID)
+        # CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES // 60],
+        #                         constants.SEND_SMS_TEMPLATE_ID)
 
-        return JsonResponse({'code': RETCODE.ok, 'errmsg': '发送短信成功'})
-
+        return JsonResponse({'code': RETCODE.OK, 'errmsg': '发送短信成功'})

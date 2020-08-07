@@ -1,4 +1,5 @@
 import re
+from venv import logger
 
 from django.contrib.auth import login
 from django.db import DatabaseError
@@ -8,6 +9,7 @@ from django.shortcuts import render, redirect
 # Create your views here.
 from django.urls import reverse
 from django.views import View
+from django_redis import get_redis_connection
 
 from meiduo.utils.response_code import RETCODE
 from users.models import User
@@ -30,11 +32,11 @@ class RegisterView(View):
         password = request.POST.get('password')
         password2 = request.POST.get('password2')
         mobile = request.POST.get('mobile')
-        sms_code = request.POST.get('sms_code')
+        sms_code_client = request.POST.get('sms_code')
         allow = request.POST.get('allow')
 
         # 对传入数据进行再次校验
-        if all([username, password, password2, mobile, sms_code, allow]):
+        if not all([username, password, password2, mobile, sms_code_client, allow]):
             return HttpResponseForbidden('缺少必传参数')
         if not re.match(r'^[a-zA-Z0-9_-]{5,20}$', username):
             return HttpResponseForbidden('请输入5-20位字符的名字')
@@ -46,6 +48,19 @@ class RegisterView(View):
             return HttpResponseForbidden('手机格式不正确')
         if allow != 'on':
             return HttpResponseForbidden('请勾选用户协议')
+
+        redis_conn = get_redis_connection('verify_code')
+        sms_code_server = redis_conn.get('sms_%s' % mobile)
+
+        try:
+            redis_conn.delete('sms_%s' % mobile)
+        except Exception as e:
+            logger.error(e)
+
+        if sms_code_server is None:
+            return render(request, 'register.html', {'sms_code_errmsg': '无效的短信验证码'})
+        if sms_code_client != sms_code_server.decode():
+            return render(request, 'register.html', {'sms_code_errmsg': '输入短信验证码有误'})
 
         try:
             user = User.objects.create_user(username=username, password=password, mobile=mobile)
