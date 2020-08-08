@@ -3,11 +3,12 @@
 # import ssl
 # ssl._create_default_https_context =ssl._create_stdlib_context # 解决Mac开发环境下，网络错误的问题
 
-from verifications.yuntongxun.CCPRestSDK import REST
 
 import ssl
 
 # 取消证书验证
+from celery_tasks.sms.yuntongxun.CCPRestSDK import REST
+
 ssl._create_default_https_context = ssl._create_unverified_context
 # 修改_serverIP的值
 # _serverIP = 'sandboxapp.cloopen.com'
@@ -69,9 +70,11 @@ class CCP(object):
         result = self.rest.sendTemplateSMS(to, dates, temp_id)
         if result.get('seatusCode') == '000000':
             # 返回0，表示发送短信成功
+            print(result)
             return 0
         else:
             # 返回-1，表示发送失败
+            print(result)
             return -1
 
 

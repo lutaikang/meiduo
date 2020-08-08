@@ -9,8 +9,8 @@ from django_redis import get_redis_connection
 
 from meiduo.utils.response_code import RETCODE
 from verifications.captcha.captcha import captcha
-from verifications.yuntongxun.ccp_sms import CCP
 from meiduo.utils import constants
+from celery_tasks.sms.tasks import ccp_send_sms_code
 
 
 class ImageCodeView(View):
@@ -74,5 +74,6 @@ class SMSCodeView(View):
         # 发送短信验证码
         # CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES // 60],
         #                         constants.SEND_SMS_TEMPLATE_ID)
+        ccp_send_sms_code.delay(mobile, sms_code)
 
         return JsonResponse({'code': RETCODE.OK, 'errmsg': '发送短信成功'})
