@@ -144,9 +144,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
-
 # 配置静态文件加载路径
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
+# 指定自定义的用户认证后端
+AUTHENTICATION_BACKENDS = ['users.utils.UsernameMobileAuthBackend']
+
+# 指定未通过验证的用户的登录路径
+LOGIN_URL = '/login/'
 
 # 配置缓存使用REDIS数据库
 CACHES = {  # 默认

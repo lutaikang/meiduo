@@ -9,6 +9,8 @@ from celery_tasks.main import celery_app
 # max_retries：异常自动重试次数的上限
 from celery_tasks.sms import constants
 from celery_tasks.sms.yuntongxun.ccp_sms import CCP
+# from apps.verifications import apps
+import test
 
 
 @celery_app.task(bind=True, name='ccp_send_sms_code', retry_backoff=3)
@@ -20,6 +22,8 @@ def ccp_send_sms_code(self, mobile, sms_code):
     :param sms_code: 短信验证码
     :return: 成功0 失败-1
     """
+    print(test.name())
+    # print(apps.VerificationsConfig.name)
 
     try:
         send_ret = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES // 60],
@@ -35,3 +39,6 @@ def ccp_send_sms_code(self, mobile, sms_code):
         raise self.retry(exc=Exception('发送短信失败'), max_retries=3)
 
     return send_ret
+
+
+# 注意celery程序和django框架是完全解耦的，使用django框架内的模块是需要django框架的环境。否则无法导入django框架内的包。

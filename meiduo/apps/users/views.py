@@ -1,12 +1,11 @@
 import re
 from venv import logger
 
-from django.contrib.auth import login
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import DatabaseError
 from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
-
-# Create your views here.
 from django.urls import reverse
 from django.views import View
 from django_redis import get_redis_connection
@@ -86,3 +85,68 @@ class UsermobileCountView(View):
     def get(self, request, mobile):
         count = User.objects.filter(mobile=mobile).count()
         return JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok', 'count': count})
+
+
+class LoginView(View):
+    """用户登录"""
+
+    def get(self, request):
+        """响应用户登录页面"""
+        return render(request, 'login.html')
+
+    def post(self, request):
+        """用户登录逻辑"""
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        remembered = request.POST.get('remembered')
+
+        _next = request.GET.get('next')
+
+        if not all([username, password]):
+            return HttpResponseForbidden('缺少必传参数')
+        if not re.match(r'^[a-zA-Z0-9_-]{5,20}$', username):
+            return HttpResponseForbidden('请输入5-20位字符的名字')
+        if not re.match(r'^[a-zA-Z0-9]{8,20}$', password):
+            return HttpResponseForbidden('请输入8-20位字符的密码')
+
+        user = authenticate(username=username, password=password)
+        if user is None:
+            return render(request, 'login.html', context={'account_errmsg': '用户名或密码输入错误'})
+
+        login(request, user)
+        # 设置状态保持的周期
+        if remembered != 'on':
+            request.session.set_expiry(0)
+        else:
+            request.session.set_expiry(None)
+
+        if _next:
+            response = redirect(_next)
+        else:
+            response = redirect(reverse('contents:index'))
+        # 登录时用户名写入到cookie，有效期15天
+        response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
+
+        return response
+
+
+class LogoutView(View):
+    """退出登录"""
+
+    def get(self, request):
+        """实现退出登录功能"""
+        # 清理session
+        logout(request)
+        # 退出登录重定向到登录页
+        response = redirect(reverse('contents:index'))
+        response.delete_cookie('username')
+
+        return response
+
+
+class UserInfo(LoginRequiredMixin, View):
+    """用户中心"""
+
+    def get(self, request):
+        """提供个人信息页面"""
+        return render(request, 'user_center_info.html')
