@@ -14,7 +14,7 @@ def check_access_token(token):
 
 def generate_eccess_token(openid):
     """加密"""
-    serializer = Serializer(settings.STATIC_KEY, 300)
+    serializer = Serializer(settings.SECRET_KEY, 300)
     date = {'openid': openid}
     token = serializer.dumps(date)
     return token.decode()
