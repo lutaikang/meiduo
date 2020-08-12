@@ -76,6 +76,7 @@ let vm = new Vue({
                   this.sms_code_tip = num + '秒';
                 }
               }, 1000, 60)
+
             } else {
               if (response.data.code == '4001') {
                 this.error_image_code_message = response.data.errmsg;
