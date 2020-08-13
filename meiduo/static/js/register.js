@@ -41,13 +41,15 @@ let vm = new Vue({
     },
 
     send_sms_code() {
+      console.log(this.sheding_flag)
       //发送短信验证码
-      if (this.sheding_flag == true) {
+      if (this.sheding_flag === true) {
+        alert("11111")
         error_sms_code_message='请不要频繁点击'
         return;
-      }
-      this.sending_flag = true;
-
+      } else {
+        this.sheding_flag = true;
+      console.log('-',this.sheding_flag)
       this.check_mobile();
       this.check_image_code();
       if (this.error_mobile == true || this.error_image_code == true) {
@@ -69,7 +71,7 @@ let vm = new Vue({
                   clearInterval(t);
                   this.sms_code_tip = '获取短信验证码';
                   this.generate_image_code(); //
-                  this.sending_flag = false;
+                  this.sheding_flag = false;
                 } else {
                   num -= 1;
                   // 展示倒计时信息
@@ -86,13 +88,15 @@ let vm = new Vue({
                 this.error_sms_code = true;
               }
               this.generate_image_code();
-              this.sending_flag = false;
+              this.sheding_flag = false;
             }
           })
           .catch(error => {
             console.log(error.response);
-            this.sending_flag = false;
+            this.sheding_flag = false;
           })
+      }
+
     },
 
     check_username() {

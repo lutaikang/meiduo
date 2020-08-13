@@ -1,3 +1,4 @@
+import json
 import re
 from venv import logger
 
@@ -149,4 +150,39 @@ class UserInfo(LoginRequiredMixin, View):
 
     def get(self, request):
         """提供个人信息页面"""
-        return render(request, 'user_center_info.html')
+        user = request.user
+        context = {
+            'username': user.username,
+            'mobile': user.mobile,
+            'email': user.email,
+            'email_active': user.email_active,
+        }
+
+        return render(request, 'user_center_info.html', context)
+
+
+class EmailView(LoginRequiredMixin, View):
+    """添加邮箱"""
+
+    def put(self, request):
+        """实现添加邮箱逻辑"""
+        # 接收参数
+        json_dict = json.loads(request.body.decode())
+        email = json_dict.get('email')
+
+        # 校验参数
+        if not email:
+            return HttpResponseForbidden('缺少必传参数')
+        if not re.match(r'^[a-z0-9][\w\.\-]*@[a-z0-9\-]+(\.[a-z]{2,5}){1,2}$', email):
+            return HttpResponseForbidden('email参数有误')
+
+        try:
+            request.user.email = email
+            request.user.save()
+        except Exception as e:
+            logger.error(e)
+            return JsonResponse({'code': RETCODE.DBERR, 'errmsg': '添加邮箱失败'})
+
+
+
+        return JsonResponse({'code': RETCODE.OK, 'errmsg': '添加邮箱成功'})
