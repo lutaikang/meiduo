@@ -1,7 +1,10 @@
 import re
 
+from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadData
 
+from meiduo.utils import constants
 from users.models import User
 
 
@@ -50,3 +53,24 @@ class UsernameMobileAuthBackend(ModelBackend):
     #         return None
     #     else:
     #         return user
+
+
+def generate_verify_email_url(user):
+    """生成邮箱验证链接"""
+    serializer = Serializer(settings.SECRET_KEY, expires_in=constants.VERIFY_EMAIL_TOKEN_EXPIRES)
+    date = {'user_id': user.id, 'email': user.email}
+    token = serializer.dumps(date).decode()
+    verify_url = settings.EMAIL_VERIFY_URL + '?token=' + token
+    return verify_url
+
+
+def check_verif_email_token(token):
+    serializer = Serializer(settings.SECRET_KEY, expires_in=constants.VERIFY_EMAIL_TOKEN_EXPIRES)
+    try:
+        data = serializer.loads(token)
+    except BadData:
+        return None
+    else:
+        user_id = data.get('user_id')
+        email = data.get('email')
+    return user_id, email

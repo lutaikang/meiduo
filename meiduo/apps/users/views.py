@@ -2,17 +2,21 @@ import json
 import re
 from venv import logger
 
+from django.conf import settings
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.mail import send_mail
 from django.db import DatabaseError
-from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
+from django.http import HttpResponseForbidden, HttpResponse, JsonResponse, HttpResponseServerError
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
 from django_redis import get_redis_connection
 
+from celery_tasks.email.tasks import send_verify_email
 from meiduo.utils.response_code import RETCODE
 from users.models import User
+from users.utils import check_verif_email_token, generate_verify_email_url
 
 
 class RegisterView(View):
@@ -161,11 +165,15 @@ class UserInfo(LoginRequiredMixin, View):
         return render(request, 'user_center_info.html', context)
 
 
-class EmailView(LoginRequiredMixin, View):
+class EmailView(View):
     """添加邮箱"""
 
     def put(self, request):
         """实现添加邮箱逻辑"""
+
+        if not request.user.is_authenticated:
+            return JsonResponse({'code': RETCODE.SESSIONERR, 'errmsg': '用户未登录'})
+
         # 接收参数
         json_dict = json.loads(request.body.decode())
         email = json_dict.get('email')
@@ -183,6 +191,33 @@ class EmailView(LoginRequiredMixin, View):
             logger.error(e)
             return JsonResponse({'code': RETCODE.DBERR, 'errmsg': '添加邮箱失败'})
 
-
+        # 异步发送验证邮件
+        verify_url = generate_verify_email_url(request.user)
+        send_verify_email.delay(email, verify_url)
+        # send_mail('1', "", settings.EMAIL_FROM, ['1554284589@qq.com'], '')
 
         return JsonResponse({'code': RETCODE.OK, 'errmsg': '添加邮箱成功'})
+
+    def get(self, request):
+        """验证邮箱接口"""
+        token = request.GET.get('token')
+        if not token:
+            return HttpResponseForbidden('缺少必传参数token')
+
+        user_id, email = check_verif_email_token(token)
+        if not user_id and not email:
+            return HttpResponseForbidden('无效的token')
+        try:
+            user = User.objects.get(id=user_id, email=email)
+        except User.DoesNotExist:
+            return HttpResponseForbidden('无效的token')
+
+        # 修改email_active的值为True
+        try:
+            user.email_active = True
+            user.save()
+        except Exception as e:
+            return HttpResponseServerError('激活邮箱失败')
+
+        # 返回邮箱验证结果
+        return redirect(reverse('users:info'))
