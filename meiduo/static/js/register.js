@@ -44,7 +44,6 @@ let vm = new Vue({
       console.log(this.sending_flag)
       //发送短信验证码
       if (this.sending_flag === true) {
-        alert("11111")
         error_sms_code_message='请不要频繁点击'
         return;
       } else {

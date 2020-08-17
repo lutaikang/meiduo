@@ -12,4 +12,7 @@ urlpatterns = [
     path('userinfo/', views.UserInfo.as_view(), name='info'),  # 用户中心展示
     path('emails/', views.EmailView.as_view()),
     path('emails/verification/', views.EmailView.as_view()),
+
+    path('address/', views.AddressView.as_view(), name='address'),
+    path('addresses/create/', views.CreateAddressView.as_view())
 ]
