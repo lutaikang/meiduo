@@ -13,6 +13,11 @@ urlpatterns = [
     path('emails/', views.EmailView.as_view()),
     path('emails/verification/', views.EmailView.as_view()),
 
-    path('address/', views.AddressView.as_view(), name='address'),
-    path('addresses/create/', views.CreateAddressView.as_view())
+    path('address/', views.AddressView.as_view(), name='address'),  # 地址展示
+    path('addresses/create/', views.CreateAddressView.as_view()),  # 新增地址
+    re_path(r'addresses/(?P<address_id>\d+)/', views.UpdateDestroyAddressView.as_view()),  # 修改和删除地址
+    re_path(r'addresses/(?P<address_id>\d+)/title/', views.DefaultAddressView.as_view()),  # 设置默认地址
+    re_path(r'addresses/(?P<address_id>\d+)/default/', views.UpdateTitleAddressView.as_view()),  # 修改标题
+    path('changepassword/', views.ChangePassword.as_view(), name='password')  # 修改密码
+
 ]
