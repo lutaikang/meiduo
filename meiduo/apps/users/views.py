@@ -420,7 +420,7 @@ class UpdateTitleAddressView(LoginRequiredJSONMixin, View):
         title = json_dict.get('title')
 
         try:
-            Address.objects.get(id=address_id).update(title=title)
+            Address.objects.filter(id=address_id).update(title=title)
         except Exception as e:
             logger.error(e)
             return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '设置地址标题失败'})
