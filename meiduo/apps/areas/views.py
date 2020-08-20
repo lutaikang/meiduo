@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.views import View
 import logging
 
-from area.models import Area
+from areas.models import Area
 from meiduo.utils.response_code import RETCODE
 
 logger = logging.getLogger('django')
