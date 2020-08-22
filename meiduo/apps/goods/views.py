@@ -33,7 +33,7 @@ class ListView(View):
         elif sort == 'hot':
             sort_filed = '-sales'
         else:
-            sort = 'defalut'
+            sort = 'default'
             sort_filed = 'ctime'
         # 查询出该类别的所有上架的商品数据
         skus = category.sku_set.filter(is_launched=True).order_by(sort_filed)
@@ -53,6 +53,7 @@ class ListView(View):
             'breadcrumb': breadcrumb,  # 面包屑导航
             'sort': sort,  # 排序字段
             'category': category,  # 第三级分类
+            'category_id': category_id,
             'page_skus': page_skus,  # 分页后的数据
             'total_page': total_page,  # 总页数
             'page_num': page_num,  # 当前页码
@@ -70,7 +71,7 @@ class HotGoodsView(View):
             category = GoodsCategory.objects.get(id=category_id)
         except GoodsCategory.DoesNotExist:
             return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': 'GoodsCategory does not exist'})
-        skus = category.subs.filter(sku__is_launched=True).order_by('-sales')[:2]
+        skus = category.sku_set.filter(is_launched=True).order_by('-sales')[:2]
         hot_skus = []
         for sku in skus:
             hot_skus.append({
