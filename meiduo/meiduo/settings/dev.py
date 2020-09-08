@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'haystack',
 
     'areas',
     'users',
@@ -247,3 +248,15 @@ DEFAULT_FILE_STORAGE = 'meiduo.utils.fastdfs.fdfs_storage.FastDFSStorage'
 # FastDFS相关参数
 # FDFS_BASE_URL = 'http://192.168.233.131:8888/'
 FDFS_BASE_URL = 'http://image.meiduo.site:8888/'
+
+# Haystack
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'URL': 'http://192.168.76.128:9200/',  # Elasticsearch服务器ip地址，端口号固定为9200
+        'INDEX_NAME': 'meiduo',  # Elasticsearch建立的索引库的名称
+    },
+}
+HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
+# haystack分页时每页记录条数
+HAYSTACK_SEARCH_RESULTS_PER_PAGE = 5
