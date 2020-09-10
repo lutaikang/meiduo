@@ -1,3 +1,6 @@
+import datetime
+import logging
+
 from django import http
 from django.core.paginator import Paginator, EmptyPage
 from django.shortcuts import render, get_object_or_404
@@ -7,8 +10,10 @@ from django.views.generic import DetailView
 
 from contents.utils import get_categories
 from meiduo.utils.response_code import RETCODE
-from .models import GoodsCategory, SKU
+from .models import GoodsCategory, SKU, GoodsVisitCount
 from .utils import get_breadcrumb
+
+logger = logging.getLogger('django')
 
 
 class ListView(View):
@@ -155,3 +160,34 @@ class GoodsDetailView(DetailView):
         #     'sku': self.object,
         # }
         return context
+
+
+class DetailVisitView(View):
+    """详情页分类商品访问量"""
+
+    def post(self, request, category_id):
+        """记录分类商品访问量"""
+        try:
+            category = GoodsCategory.objects.get(id=category_id)
+        except GoodsCategory.DoesNotExist:
+            return http.HttpResponseForbidden('查询不到该类别商品')
+
+        # 获取今天日期
+        # t = datetime.datetime.timezone()
+        # today_str = '%d-%02d-%02d' % (t.year, t.month, t.day)
+        # today_date = datetime.datetime.strptime(today_str, '%Y-%m-%d')
+        today_date = datetime.date.today()
+        try:
+            counts_data = category.goodsvisitcount_set.get(date=today_date)
+        except GoodsVisitCount.DoesNotExist:
+            counts_data = GoodsVisitCount()
+
+        try:
+            counts_data.category = category
+            counts_data.count += 1
+            counts_data.save()
+        except Exception as e:
+            logger.error(e)
+            return http.HttpResponseServerError('服务器异常')
+        # logger.error(1)
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK'})
