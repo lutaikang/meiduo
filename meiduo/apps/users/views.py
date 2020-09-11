@@ -74,8 +74,10 @@ class RegisterView(View):
             return render(request, 'register.html', {'register_errmsg': '注册失败'})
 
         login(request, user)
+        response = redirect(reverse('contents:index'))
+        response.set_cookie('username', user.username)
 
-        return redirect(reverse('contents:index'))
+        return response
 
 
 class UsernameCountView(View):

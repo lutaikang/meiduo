@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 
 from django import http
@@ -7,9 +8,11 @@ from django.shortcuts import render, get_object_or_404
 from django.views import View
 # Create your views here.
 from django.views.generic import DetailView
+from django_redis import get_redis_connection
 
 from contents.utils import get_categories
 from meiduo.utils.response_code import RETCODE
+from meiduo.utils.views import LoginRequiredJSONMixin
 from .models import GoodsCategory, SKU, GoodsVisitCount
 from .utils import get_breadcrumb
 
@@ -191,3 +194,45 @@ class DetailVisitView(View):
             return http.HttpResponseServerError('服务器异常')
         # logger.error(1)
         return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK'})
+
+
+class UserBrowseHistory(LoginRequiredJSONMixin, View):
+    """用户浏览记录"""
+
+    def get(self, request):
+        """获取用户浏览记录"""
+        user_id = request.user.id
+        redis_conn = get_redis_connection('history')
+        sku_list = redis_conn.lrange('history_%s' % user_id, 0, -1)
+        skus = []
+        for sku_id in sku_list:
+            sku = SKU.objects.get(id=sku_id)
+            print(sku_id)   # 字节类型数据json不能进行序列化
+            skus.append({
+                'id': sku.id,
+                'name': sku.name,
+                'default_image_url': sku.default_image.url,
+                'price': sku.price
+            })
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok', 'skus': skus})
+
+    def post(self, request):
+        """保存用户浏览记录"""
+        json_dict = json.loads(request.body.decode())
+        sku_id = json_dict.get('sku_id')
+
+        try:
+            sku = SKU.objects.get(id=sku_id)
+        except SKU.DoesNotExist:
+            return http.HttpResponseForbidden('sku不存在')
+
+        redis_conn = get_redis_connection('history')
+        pl = redis_conn.pipeline()
+        user_id = request.user.id
+
+        pl.lrem('history_%s' % user_id, 0, sku_id)
+        pl.lpush('history_%s' % user_id, sku_id)
+        pl.ltrim('history_%s' % user_id, 0, 4)
+        pl.execute()
+
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok'})
