@@ -12,6 +12,7 @@ import logging
 from django.views import View
 from django_redis import get_redis_connection
 
+from carts.utils import merge_cart_cookie_to_redis
 from meiduo.utils.response_code import RETCODE
 from oauth.models import OauthQQUser
 from oauth.utils import generate_eccess_token, check_access_token
@@ -67,7 +68,7 @@ class QQAuthUserView(View):
             login(request, user)
             response = redirect(_next)
             response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
-
+            response = merge_cart_cookie_to_redis(request, user, response)
             return response
 
     def post(self, request):
@@ -127,4 +128,6 @@ class QQAuthUserView(View):
 
         # 登录时用户名写入到cookie，有效期15天
         response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
+
+        response = merge_cart_cookie_to_redis(request, user, response)
         return response

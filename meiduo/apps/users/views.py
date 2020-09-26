@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.views import View
 from django_redis import get_redis_connection
 
+from carts.utils import merge_cart_cookie_to_redis
 from celery_tasks.email.tasks import send_verify_email
 from meiduo.utils.response_code import RETCODE
 from meiduo.utils.views import LoginRequiredJSONMixin
@@ -77,6 +78,8 @@ class RegisterView(View):
         response = redirect(reverse('contents:index'))
         response.set_cookie('username', user.username)
 
+        response = merge_cart_cookie_to_redis(request, user, response)
+
         return response
 
 
@@ -138,6 +141,8 @@ class LoginView(View):
         else:
             request.session.set_expiry(None)
             response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
+
+        response = merge_cart_cookie_to_redis(request, user, response)
 
         return response
 
