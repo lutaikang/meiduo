@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-  <title>美多商城-用户中心</title>
+  <title>美多商城-订单提交成功</title>
   <link rel="stylesheet" type="text/css" href="{{ static('css/reset.css') }}">
   <link rel="stylesheet" type="text/css" href="{{ static('css/main.css') }}">
   <script type="text/javascript" src="{{ static('js/vue-2.5.16.js') }}"></script>
@@ -29,7 +29,7 @@
           <span>|</span>
           <a href="{{ url('users:info') }}">用户中心</a>
           <span>|</span>
-          <a href="cart.html">我的购物车</a>
+          <a href="{{ url('carts:info') }}">我的购物车</a>
           <span>|</span>
           <a href="user_center_order.html">我的订单</a>
         </div>
@@ -51,57 +51,19 @@
       </ul>
     </div>
   </div>
-  <div class="main_con clearfix">
-    <div class="left_menu_con clearfix">
-      <h3>用户中心</h3>
-      <ul>
-        <li><a href="{{ url('users:info') }}" class="active">· 个人信息</a></li>
-        <li><a href="{{ url('users:address') }}">· 收货地址</a></li>
-        <li><a href="user_center_order.html">· 全部订单</a></li>
-        <li><a href="{{ url('users:password') }}">· 修改密码</a></li>
-      </ul>
+  <div class="common_list_con clearfix">
+    <div class="order_success">
+      <p><b>订单提交成功，订单总价<em>¥{{ payment_amount }}</em></b></p>
+      <p>您的订单已成功生成，选择您想要的支付方式，订单号：{{ order_id }}</p>
+      <p><a href="{{ url('orders:info', args=(1, )) }}">您可以在【用户中心】->【我的订单】查看该订单</a></p>
     </div>
-    <div class="right_content clearfix" v-cloak>
-      <div class="info_con clearfix">
-        <h3 class="common_title2">基本信息</h3>
-        <ul class="user_info_list">
-          <li><span>用户名：</span>[[ username ]]</li>
-          <li><span>联系方式：</span>[[ mobile ]]</li>
-          <li>
-            <span>Email：</span>
-            <div v-if="set_email">
-              <input v-model="email" @blur="check_email" type="email" name="email" class="email">
-              <input @click="save_email" type="button" name="" value="保 存">
-              <input @click="cancel_email" type="reset" name="" value="取 消">
-              <div v-show="error_email" class="error_email_tip">邮箱格式错误</div>
-            </div>
-            <div v-else>
-              <input v-model="email" type="email" name="email" class="email" readonly>
-              <div v-if="email_active">
-                已验证
-              </div>
-              <div v-else>
-                待验证<input @click="save_email" :disabled="send_email_btn_disabled" type="button" :value="send_email_tip">
-              </div>
-            </div>
-          </li>
-        </ul>
-      </div>
-      <h3 class="common_title2">最近浏览</h3>
-      <div class="has_view_list" v-cloak>
-        <ul class="goods_type_list clearfix">
-          <li v-for="sku in histories">
-            <a :href="sku.url"><img :src="sku.default_image_url"></a>
-            <h4><a :href="sku.url">[[ sku.name ]]</a></h4>
-            <div class="operate">
-              <span class="price">￥[[ sku.price ]]</span>
-              <span class="unit">台</span>
-              <a @click="add_carts" class="add_goods" title="加入购物车"></a>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </div>
+  </div>
+  <div class="order_submit clearfix">
+    {% if pay_method == '1' %}
+      <a href="{{ url('contents:index') }}">继续购物</a>
+    {% else %}
+      <a @click="order_payment" class="payment">去支付</a>
+    {% endif %}
   </div>
   <div class="footer">
     <div class="foot_link">
@@ -117,13 +79,7 @@
     <p>电话：010-****888 京ICP备*******8号</p>
   </div>
 </div>
-<script type="text/javascript">
-    let username = "{{ username }}";
-    let mobile = "{{ mobile }}";
-    let email = "{{ email }}";
-    let email_active = "{{ email_active }}";
-</script>
 <script type="text/javascript" src="{{ static('js/common.js') }}"></script>
-<script type="text/javascript" src="{{ static('js/user_center_info.js') }}"></script>
+<script type="text/javascript" src="{{ static('js/order_success.js') }}"></script>
 </body>
 </html>

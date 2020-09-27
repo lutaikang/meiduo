@@ -258,7 +258,7 @@ class AddressView(LoginRequiredMixin, View):
             })
 
         context = {
-            'default_address_id': request.user.default_address.id or 0,
+            'default_address_id': request.user.default_address and request.user.default_address.id or 0,
             'addresses': address_list
         }
         return render(request, 'user_center_site.html', context)

@@ -14,7 +14,7 @@ def merge_cart_cookie_to_redis(request, user, response):
     :return: 返回一个response
     """
 
-    cart = request.COOKIE.get('carts')
+    cart = request.COOKIES.get('carts')
     if not cart:
         return response
 
@@ -27,7 +27,7 @@ def merge_cart_cookie_to_redis(request, user, response):
     for sku_id in cookie_cart_dict.keys():
         new_cart_dict[sku_id] = cookie_cart_dict[sku_id]['count']
 
-        if cookie_cart_dict[sku_id]['selected']:
+        if cookie_cart_dict[sku_id].get('selected'):
             new_cart_select_add.append(sku_id)
         else:
             new_cart_select_remove.append(sku_id)

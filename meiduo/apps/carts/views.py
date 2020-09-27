@@ -32,12 +32,12 @@ class CartsView(View):
             carts_dict = {}
             for sku_id, count in redis_card.items():
                 carts_dict[int(sku_id)] = {
-                    'count': count,
+                    'count': int(count),
                     'selected': sku_id in cart_selected,
                 }
         else:
             # 用户未登录查询cookie购物车
-            carts_str = request.COOKIE.get('carts')
+            carts_str = request.COOKIES.get('carts')
             if carts_str:
                 carts_dict = pickle.loads(base64.b64decode(carts_str.encode()))
             else:
@@ -54,7 +54,7 @@ class CartsView(View):
                 'selected': str(carts_dict.get(sku.id).get('selected')),
                 'default_image_url': sku.default_image.url,
                 'price': str(sku.price),
-                'amount': str(sku.price * carts_dict.get(sku.id).get('selected'))
+                'amount': str(sku.price * carts_dict.get(sku.id).get('count'))
             })
         context = {
             'cart_skus': cart_skus
@@ -98,10 +98,10 @@ class CartsView(View):
             pl.execute()
             return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '添加购物车成功'})
         else:
-            # 用户未登录，操作cookie购物车
-            cart_str = request.COOKIE.get("carts")
+            # 用户未登录，操作COOKIE购物车
+            cart_str = request.COOKIES.get("carts")
             if cart_str:
-                carts_dict = pickle.loads(base64.b16decode(cart_str.encode()))
+                carts_dict = pickle.loads(base64.b64decode(cart_str.encode()))
             else:
                 carts_dict = {}
 
@@ -145,7 +145,7 @@ class CartsView(View):
         user = request.user
         if user.is_authenticated:
             redis_conn = get_redis_connection('carts')
-            pl = redis_conn.pipeline
+            pl = redis_conn.pipeline()
 
             pl.hset('carts_%s' % user.id, sku_id, count)
 
@@ -166,7 +166,7 @@ class CartsView(View):
             }
             return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '修改购物车成功', 'cart_sku': cart_sku})
         else:
-            carts_str = request.COOKIE.get('carts')
+            carts_str = request.COOKIES.get('carts')
             if carts_str:
                 carts_dict = pickle.loads(base64.b64decode(carts_str.encode()))
             else:
@@ -205,20 +205,20 @@ class CartsView(View):
         user = request.user
         if user.is_authenticated:
             redis_conn = get_redis_connection('carts')
-            pl = redis_conn.pipeline
+            pl = redis_conn.pipeline()
             pl.hdel('carts_%s' % user.id, sku_id)
             pl.srem('selected_%s' % user.id, sku_id)
             pl.execute()
             return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '删除购物车成功'})
         else:
-            carts_str = request.COOKIE.get('carts')
+            carts_str = request.COOKIES.get('carts')
             if carts_str:
                 carts_dict = pickle.loads(base64.b64decode(carts_str.encode()))
             else:
                 carts_dict = {}
             if sku_id in carts_dict:
                 del carts_dict[sku_id]
-            cookie_cart_str = base64.b64decode(pickle.dumps(carts_dict))
+            cookie_cart_str = base64.b64encode(pickle.dumps(carts_dict)).decode()
             response = http.JsonResponse({'code': RETCODE.OK, 'errmsg': '删除购物车成功'})
             response.set_cookie('carts', cookie_cart_str)
 
@@ -250,15 +250,15 @@ class CartsSelectAllView(View):
                 redis_conn.srem('selected_%s' % user.id, *sku_id_list)
             return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '全选购物车成功'})
         else:
-            carts_str = request.COOKIE.get('carts')
+            carts_str = request.COOKIES.get('carts')
             response = http.JsonResponse({'code': RETCODE.OK, 'errmsg': '全选购物车成功'})
 
             if carts_str:
                 cart = pickle.loads(base64.b64decode(carts_str.encode()))
                 for sku_id in cart.keys():
                     cart[sku_id]['selected'] = selected
-                    cookie_cart = base64.b64encode(pickle.dumps(cart)).decode()
-                    response.set_cookie('carts', cookie_cart)
+                cookie_cart = base64.b64encode(pickle.dumps(cart)).decode()
+                response.set_cookie('carts', cookie_cart)
 
             return response
 
@@ -270,22 +270,22 @@ class CartsSimpleView(View):
         if user.is_authenticated:
             cart_dict = {}
             redis_conn = get_redis_connection('carts')
-            cart_redis_dict = redis_conn.pipeline('carts_%s' % user.id)
+            cart_redis_dict = redis_conn.hgetall('carts_%s' % user.id)
             selected = redis_conn.smembers('selected_%s' % user.id)
             for sku_id, count in cart_redis_dict.items():
                 cart_dict[int(sku_id)] = {
-                    'count': count,
+                    'count': int(count),
                     'selected': sku_id in selected,
                 }
         else:
-            carts = request.COOKIE.get('carts')
+            carts = request.COOKIES.get('carts')
             if carts:
                 cart_dict = pickle.loads(base64.b64decode(carts.encode()))
             else:
                 cart_dict = {}
 
         cart_skus = []
-        sku_ids = cart_dict.items()
+        sku_ids = cart_dict.keys()
         skus = SKU.objects.filter(id__in=sku_ids)
         for sku in skus:
             cart_skus.append({

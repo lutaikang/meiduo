@@ -7,6 +7,8 @@ let vm = new Vue({
         hot_skus: [],
         cart_total_count: 0,
         carts: [],
+        sku_count: 1,
+
     },
     mounted(){
         // 获取热销商品数据
@@ -47,6 +49,31 @@ let vm = new Vue({
                             this.carts[i].name = this.carts[i].name.substring(0, 25) + '...';
                         }
                         this.cart_total_count += this.carts[i].count;
+                    }
+                })
+                .catch(error => {
+                    console.log(error.response);
+                })
+        },
+        // 加入购物车
+        add_carts(){
+            let url = '/carts/';
+            axios.post(url, {
+                sku_id: parseInt(this.sku_id),
+                count: this.sku_count
+            }, {
+                headers: {
+                    'X-CSRFToken':getCookie('csrftoken')
+                },
+                responseType: 'json',
+                withCredentials: true
+            })
+                .then(response => {
+                    if (response.data.code == '0') {
+                        alert('添加购物车成功');
+                        this.cart_total_count += this.sku_count;
+                    } else { // 参数错误
+                        alert(response.data.errmsg);
                     }
                 })
                 .catch(error => {

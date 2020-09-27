@@ -25,6 +25,7 @@ urlpatterns = [
     path('', include(('oauth.urls', 'oauth'), namespace='oauth')),
     path('', include(('areas.urls', 'areas'), namespace='areas')),
     path('', include(('goods.urls', 'goods'), namespace='goods')),
-    path('', include(('carts.urls', 'goods'), namespace='carts')),
+    path('', include(('carts.urls', 'carts'), namespace='carts')),
+    path('', include(('orders.urls', 'orders'), namespace='orders')),
     path(r'search/', include('haystack.urls')),
 ]

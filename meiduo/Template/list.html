@@ -138,7 +138,7 @@
             <div class="operate">
               <span class="price">￥{{ sku.price }}</span>
               <span class="unit">台</span>
-              <a href="#" class="add_goods" title="加入购物车"></a>
+              <a @click="add_carts"  class="add_goods" title="加入购物车"></a>
             </div>
           </li>
         {% endfor %}
