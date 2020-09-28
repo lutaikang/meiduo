@@ -27,5 +27,6 @@ urlpatterns = [
     path('', include(('goods.urls', 'goods'), namespace='goods')),
     path('', include(('carts.urls', 'carts'), namespace='carts')),
     path('', include(('orders.urls', 'orders'), namespace='orders')),
+    path('', include(('payment.urls', 'payment'), namespace='payment')),
     path(r'search/', include('haystack.urls')),
 ]
