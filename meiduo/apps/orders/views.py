@@ -95,7 +95,7 @@ class OrderCommitView(LoginRequiredJSONMixin, View):
                 # 创建事务保存点
                 save_id = transaction.savepoint()
 
-                order = OrderInfo(
+                order = OrderInfo.objects.create(
                     order_id=order_id,
                     user=user,
                     address=address,
@@ -169,6 +169,7 @@ class OrderCommitView(LoginRequiredJSONMixin, View):
 
 class OrderSuccessView(LoginRequiredMixin, View):
     """提交订单成功"""
+
     def get(self, request):
         order_id = request.GET.get('order_id')
         payment_amount = request.GET.get('payment_amount')
@@ -184,15 +185,16 @@ class OrderSuccessView(LoginRequiredMixin, View):
 
 class UserOrderInfoView(LoginRequiredMixin, View):
     """我的订单"""
+
     def get(self, request, page_num):
         """提供我的订单页面"""
         user = request.user
         # 查询订单
-        orders = user.orderinfo_set.all().order_by('-create_time')
+        orders = user.orderinfo_set.all().order_by('-ctime')
         # 遍历所有订单
         for order in orders:
             order.status_name = OrderInfo.ORDER_STATUS_CHOICES[order.status-1][1]
-            order.pay_method_name = OrderInfo.PAY_METHODS_CHOICES[order.pay_method-1][1]
+            order.pay_method_name = OrderInfo.PAY_METHOD_CHOICES[order.pay_method - 1][1]
             order.sku_list = []
             order_goods = order.skus.all()
             for order_good in order_goods:

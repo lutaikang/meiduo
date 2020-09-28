@@ -7,3 +7,4 @@ QQLoginTool
 django_extensions
 elasticsearch==2.4.1
 django-haystack==3.0b2
+python-alipay-sdkopenssl
