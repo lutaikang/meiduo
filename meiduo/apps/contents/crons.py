@@ -36,9 +36,5 @@ def generate_static_index_html():
         f.write(html_text)
 
 
-def ccc(name):
-    return name
-
-
 if __name__ == "__main__":
     generate_static_index_html()

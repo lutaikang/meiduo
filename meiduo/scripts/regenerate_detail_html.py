@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-import sys
+import sys, os
 
-sys.path.insert(0, '../')
+BASEDIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+sys.path.insert(0, BASEDIR)
 print(sys.path)
 
-import os
+
 
 if not os.getenv('DJANGO_SETTINGS_MODULE'):
     os.environ['DJANGO_SETTINGS_MODULE'] = 'meiduo.settings.dev'

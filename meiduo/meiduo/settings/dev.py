@@ -29,9 +29,9 @@ sys.path.insert(1, BASE_DIR)
 SECRET_KEY = 'vey2stf#k%q45hg9s&((xwc6d+=p7a+q%xi==h&!#csne7g%fr'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'www.meiduo.site']
+ALLOWED_HOSTS = ['127.0.0.1', 'www.meiduo.site', '192.168.190.128']
 
 # Application definition
 
@@ -272,7 +272,7 @@ FDFS_BASE_URL = 'http://image.meiduo.site:8888/'
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
-        'URL': 'http://192.168.76.128:9200/',  # Elasticsearch服务器ip地址，端口号固定为9200
+        'URL': 'http://192.168.190.128:9200/',  # Elasticsearch服务器ip地址，端口号固定为9200
         'INDEX_NAME': 'meiduo',  # Elasticsearch建立的索引库的名称
     },
 }
@@ -288,7 +288,12 @@ ALIPAY_RETURN_URL = 'http://www.meiduo.site:8000/payment/status/'
 
 # 定时页面静态化
 CRONJOBS = [
+    # 每1分钟生成一次首页静态文件
     ('*/1 * * * *', 'contents.crons.generate_static_index_html',
-     '>>' + os.path.join(os.path.dirname(BASE_DIR), 'logs/crontab.log'))
+     '>> ' + os.path.join(os.path.dirname(BASE_DIR), 'logs/crontab.log'))
 ]
+
 CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'
+
+# 静态文件收集目录
+STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static')
