@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
-
+import datetime
 import os, sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -29,7 +29,7 @@ sys.path.insert(1, BASE_DIR)
 SECRET_KEY = 'vey2stf#k%q45hg9s&((xwc6d+=p7a+q%xi==h&!#csne7g%fr'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'www.meiduo.site', '192.168.190.128']
 
@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'carts',
     'orders',
     'payment',
+    'meiduo_admin',
 ]
 
 MIDDLEWARE = [
@@ -297,3 +298,18 @@ CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'
 
 # 静态文件收集目录
 STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static')
+
+
+# DRF相关配置
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # 添加jwt认证
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+}

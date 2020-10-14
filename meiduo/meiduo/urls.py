@@ -16,7 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+import meiduo_admin
 
+# noinspection SpellCheckingInspection
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(('users.urls', 'users'), namespace='users')),
@@ -29,4 +31,6 @@ urlpatterns = [
     path('', include(('orders.urls', 'orders'), namespace='orders')),
     path('', include(('payment.urls', 'payment'), namespace='payment')),
     path(r'search/', include('haystack.urls')),
+
+    path(r'', include(('meiduo_admin.urls', 'meiduo_admin'), namespace='meiduo_admin'))
 ]
